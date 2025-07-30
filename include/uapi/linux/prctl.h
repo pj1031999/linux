@@ -416,4 +416,6 @@ struct prctl_mm_map {
 # define PR_CFI_DISABLE		_BITUL(1)
 # define PR_CFI_LOCK		_BITUL(2)
 
+#define PR_THEMIS_VLOG_SET		129
+
 #endif /* _LINUX_PRCTL_H */
