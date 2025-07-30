@@ -2805,6 +2805,15 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 	case PR_FUTEX_HASH:
 		error = futex_hash_prctl(arg2, arg3, arg4);
 		break;
+	case PR_THEMIS_VLOG_SET:
+#ifdef CONFIG_THEMIS
+		task_lock(current);
+		current->themis_vlog = arg2 & 1;
+		task_unlock(current);
+#else
+		error = -EINVAL;
+#endif
+		break;
 	default:
 		trace_task_prctl_unknown(option, arg2, arg3, arg4, arg5);
 		error = -EINVAL;

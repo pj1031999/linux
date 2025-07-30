@@ -228,8 +228,14 @@ static void show_signal(struct task_struct *tsk, int signr,
 			const char *type, const char *desc,
 			struct pt_regs *regs, long error_code)
 {
-	if (show_unhandled_signals && unhandled_signal(tsk, signr) &&
-	    printk_ratelimit()) {
+	unsigned int themis_vlog = 0;
+
+#ifdef CONFIG_THEMIS
+	themis_vlog = tsk->themis_vlog;
+#endif
+
+	if (!themis_vlog && show_unhandled_signals &&
+	    unhandled_signal(tsk, signr) && printk_ratelimit()) {
 		pr_info("%s[%d] %s%s ip:%lx sp:%lx error:%lx",
 			tsk->comm, task_pid_nr(tsk), type, desc,
 			regs->ip, regs->sp, error_code);

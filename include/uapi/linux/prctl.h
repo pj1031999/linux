@@ -376,4 +376,6 @@ struct prctl_mm_map {
 # define PR_FUTEX_HASH_SET_SLOTS	1
 # define PR_FUTEX_HASH_GET_SLOTS	2
 
+#define PR_THEMIS_VLOG_SET		129
+
 #endif /* _LINUX_PRCTL_H */

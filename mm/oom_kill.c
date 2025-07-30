@@ -922,6 +922,7 @@ static void __oom_kill_process(struct task_struct *victim, const char *message)
 {
 	struct task_struct *p;
 	struct mm_struct *mm;
+	unsigned int themis_vlog = 0;
 	bool can_oom_reap = true;
 
 	p = find_lock_task_mm(victim);
@@ -951,13 +952,17 @@ static void __oom_kill_process(struct task_struct *victim, const char *message)
 	 */
 	do_send_sig_info(SIGKILL, SEND_SIG_PRIV, victim, PIDTYPE_TGID);
 	mark_oom_victim(victim);
-	pr_err("%s: Killed process %d (%s) total-vm:%lukB, anon-rss:%lukB, file-rss:%lukB, shmem-rss:%lukB, UID:%u pgtables:%lukB oom_score_adj:%hd\n",
-		message, task_pid_nr(victim), victim->comm, K(mm->total_vm),
-		K(get_mm_counter(mm, MM_ANONPAGES)),
-		K(get_mm_counter(mm, MM_FILEPAGES)),
-		K(get_mm_counter(mm, MM_SHMEMPAGES)),
-		from_kuid(&init_user_ns, task_uid(victim)),
-		mm_pgtables_bytes(mm) >> 10, victim->signal->oom_score_adj);
+#ifdef CONFIG_THEMIS
+	themis_vlog = victim->themis_vlog;
+#endif
+	if (!themis_vlog)
+		pr_err("%s: Killed process %d (%s) total-vm:%lukB, anon-rss:%lukB, file-rss:%lukB, shmem-rss:%lukB, UID:%u pgtables:%lukB oom_score_adj:%hd\n",
+		       message, task_pid_nr(victim), victim->comm, K(mm->total_vm),
+		       K(get_mm_counter(mm, MM_ANONPAGES)),
+		       K(get_mm_counter(mm, MM_FILEPAGES)),
+		       K(get_mm_counter(mm, MM_SHMEMPAGES)),
+		       from_kuid(&init_user_ns, task_uid(victim)),
+		       mm_pgtables_bytes(mm) >> 10, victim->signal->oom_score_adj);
 	task_unlock(victim);
 
 	/*
@@ -1020,6 +1025,7 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
 	struct mem_cgroup *oom_group;
 	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
 					      DEFAULT_RATELIMIT_BURST);
+	unsigned int themis_vlog = 0;
 
 	/*
 	 * If the task is already exiting, don't alarm the sysadmin or kill
@@ -1034,9 +1040,12 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
 		put_task_struct(victim);
 		return;
 	}
+#ifdef CONFIG_THEMIS
+	themis_vlog = victim->themis_vlog;
+#endif
 	task_unlock(victim);
 
-	if (__ratelimit(&oom_rs)) {
+	if (!themis_vlog && __ratelimit(&oom_rs)) {
 		dump_header(oc);
 		dump_oom_victim(oc, victim);
 	}
@@ -1055,7 +1064,8 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
 	 */
 	if (oom_group) {
 		memcg_memory_event(oom_group, MEMCG_OOM_GROUP_KILL);
-		mem_cgroup_print_oom_group(oom_group);
+		if (!themis_vlog)
+			mem_cgroup_print_oom_group(oom_group);
 		mem_cgroup_scan_tasks(oom_group, oom_kill_memcg_member,
 				      (void *)message);
 		mem_cgroup_put(oom_group);

@@ -1042,6 +1042,9 @@ struct task_struct {
 	unsigned                        in_thrashing:1;
 #endif
 	unsigned			in_nf_duplicate:1;
+#ifdef CONFIG_THEMIS
+	unsigned			themis_vlog:1;
+#endif
 #ifdef CONFIG_PREEMPT_RT
 	struct netdev_xmit		net_xmit;
 #endif

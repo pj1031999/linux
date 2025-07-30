@@ -2089,6 +2089,10 @@ __latent_entropy struct task_struct *copy_process(
 	p->psi_flags = 0;
 #endif
 
+#ifdef CONFIG_THEMIS
+	p->themis_vlog = current->themis_vlog;
+#endif
+
 	task_io_accounting_init(&p->ioac);
 	acct_clear_integrals(p);
 

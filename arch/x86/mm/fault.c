@@ -778,6 +778,7 @@ __bad_area_nosemaphore(struct pt_regs *regs, unsigned long error_code,
 		       unsigned long address, u32 pkey, int si_code)
 {
 	struct task_struct *tsk = current;
+	unsigned int themis_vlog = 0;
 
 	if (!user_mode(regs)) {
 		kernelmode_fixup_or_oops(regs, error_code, address,
@@ -812,7 +813,11 @@ __bad_area_nosemaphore(struct pt_regs *regs, unsigned long error_code,
 	if (fixup_vdso_exception(regs, X86_TRAP_PF, error_code, address))
 		return;
 
-	if (likely(show_unhandled_signals))
+#ifdef CONFIG_THEMIS
+	themis_vlog = tsk->themis_vlog;
+#endif
+
+	if (likely(show_unhandled_signals) && !themis_vlog)
 		show_signal_msg(regs, error_code, address, tsk);
 
 	set_signal_archinfo(address, error_code);
