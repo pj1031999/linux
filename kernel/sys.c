@@ -2906,6 +2906,14 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 			break;
 		if (arg3 & PR_CFI_LOCK && !(arg3 & PR_CFI_DISABLE))
 			error = arch_prctl_lock_branch_landing_pad_state(me);
+	case PR_THEMIS_VLOG_SET:
+#ifdef CONFIG_THEMIS
+		task_lock(current);
+		current->themis_vlog = arg2 & 1;
+		task_unlock(current);
+#else
+		error = -EINVAL;
+#endif
 		break;
 	default:
 		trace_task_prctl_unknown(option, arg2, arg3, arg4, arg5);
